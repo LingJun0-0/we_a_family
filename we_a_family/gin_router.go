@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+//初始化路由
 func getGinApp() *gin.Engine {
 	router := gin.New()
 	// 全局中间件

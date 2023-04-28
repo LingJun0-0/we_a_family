@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+//尽量只是把需求重导向具体的方法并返回结果到具体界面,不要处理数据
 func register_url(router *gin.Engine) {
 
 	// hello world
@@ -20,13 +21,13 @@ func register_url(router *gin.Engine) {
 		// 一部分数据相关工作放到了controller
 		data := gen_decoder()
 		// 输出 : {"lang":"GO\u8bed\u8a00","tag":"\u003cbr\u003e"}
-		context.AsciiJSON(http.StatusOK, data)
-		//c.JSON(http.StatusOK, data)
+		//context.AsciiJSON(http.StatusOK, data)
+		context.JSON(http.StatusOK, data)
 	})
 
 	// html load
-	router.LoadHTMLGlob("D:\\Program Files\\GoPath\\src\\we_a_family\\templates\\*")
-	//router.LoadHTMLFiles("templates/template1.html", "templates/template2.html")
+	router.LoadHTMLGlob("D:\\study\\gitpro\\we_a_family\\we_a_family\\templates\\*")
+	//router.LoadHTMLFiles("D:\\study\\gitpro\\we_a_family\\we_a_family\\templates\\index.html")
 	router.GET("/index", func(context *gin.Context) {
 		context.HTML(http.StatusOK, "index.html", gen_title_by_num())
 	})
