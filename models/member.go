@@ -71,7 +71,7 @@ func UpdateOneMember(username, password string) {
 	fmt.Printf("update success rows:%d\n", res.RowsAffected)
 }
 
-// 删除一个用户
+// 删除一个用户需要用户名
 func DelOneMember(username string) {
 	res, err := FindOneMember(username)
 	if err != nil {
