@@ -24,7 +24,7 @@ func InitRouters() *gin.Engine {
 	Router.GET("/findoneUseid/:id", func(c *gin.Context) {
 		id := c.Param("id")
 		id1, _ := strconv.Atoi(id)
-		m, _ := Models.FindOneMemberUserId(id1)
+		m, _ := Models.FindOneMemberUseId(id1)
 		c.JSON(http.StatusOK, m.Id)
 	})
 	Router.GET("/findall", func(c *gin.Context) {

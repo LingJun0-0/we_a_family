@@ -29,7 +29,7 @@ func FindOneMember(username string) (Member, error) {
 }
 
 //按用户id查用户信息
-func FindOneMemberUserId(id int) (Member, error) {
+func FindOneMemberUseId(id int) (Member, error) {
 	var m Member
 	err := global.DB.Where("id = ?", id).First(&m)
 	if err.Error != nil {
