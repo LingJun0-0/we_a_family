@@ -5,8 +5,8 @@ import (
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"log"
-	"we_a_family/config"
-	"we_a_family/global"
+	"we_a_family/we_a_family/config"
+	"we_a_family/we_a_family/global"
 )
 
 //initConf 读取yaml文件的配置

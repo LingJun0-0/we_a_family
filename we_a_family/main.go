@@ -1,8 +1,8 @@
 package main
 
 import (
-	"we_a_family/core"
-	"we_a_family/global"
+	"we_a_family/we_a_family/core"
+	"we_a_family/we_a_family/global"
 )
 
 func main() {

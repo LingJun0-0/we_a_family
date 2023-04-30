@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"time"
-	"we_a_family/global"
+	"we_a_family/we_a_family/global"
 )
 
 func InitGorm() *gorm.DB {

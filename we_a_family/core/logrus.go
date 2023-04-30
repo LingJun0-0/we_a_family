@@ -6,7 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"os"
 	"path"
-	"we_a_family/global"
+	"we_a_family/we_a_family/global"
 )
 
 const (

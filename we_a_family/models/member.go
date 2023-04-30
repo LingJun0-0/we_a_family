@@ -5,7 +5,7 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"time"
-	"we_a_family/global"
+	"we_a_family/we_a_family/global"
 )
 
 type Member struct {
