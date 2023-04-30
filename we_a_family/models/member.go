@@ -1,7 +1,6 @@
 package Models
 
 import (
-	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"time"
@@ -9,13 +8,13 @@ import (
 )
 
 type Member struct {
-	Id         int            `gorm:"primary_key"`
-	Username   string         `gorm:"not null"`
-	Password   string         `gorm:"not null"`
-	Status     int            `gorm:"not null"`
-	Created_at string         `gorm:"not null"`
-	Updated_at string         `gorm:"not null"`
-	Deleted_at sql.NullString `gorm:"null"`
+	Id         int    `gorm:"primary_key"`
+	Username   string `gorm:"not null"`
+	Password   string `gorm:"not null"`
+	Status     int    `gorm:"not null"`
+	Created_at string `gorm:"not null"`
+	Updated_at string `gorm:"not null"`
+	Deleted    bool   `gorm:"false"`
 }
 
 //按用户名查一个
@@ -23,9 +22,11 @@ func FindOneMember(username string) (Member, error) {
 	var m Member
 	err := global.DB.Where("username = ?", username).First(&m)
 	if err.Error != nil {
-		fmt.Printf("findone data failed err :%s\n", err.Error)
+		fmt.Printf("findone member failed err :%s\n", err.Error)
 	}
-
+	if m.Deleted != false {
+		fmt.Printf("member deleted is ture", m.Deleted)
+	}
 	fmt.Printf("findone member info %v\n", m)
 	return m, err.Error
 }
@@ -43,7 +44,7 @@ func FindsAllMember() []Member {
 
 // 插入一条数据
 func InsertOneMember(username string, password string) (err error) {
-	m := Member{Username: username, Password: password, Status: 1, Deleted_at: sql.NullString{Valid: false}, Created_at: time.Now().Format(global.TimeFormat), Updated_at: time.Now().Format(global.TimeFormat)}
+	m := Member{Username: username, Password: password, Status: 1, Deleted: false, Created_at: time.Now().Format(global.TimeFormat), Updated_at: time.Now().Format(global.TimeFormat)}
 	res := global.DB.Create(&m)
 	if res.Error != nil {
 		fmt.Printf("Create insert failed err:%s\n", res.Error)
@@ -78,6 +79,6 @@ func DelOneMember(username string) {
 		fmt.Printf("find failed err:%s\n", err)
 		return
 	}
-	ret := global.DB.Delete(&Member{}, res.Id)
+	ret := global.DB.Model(&res).Select("deleted").Updates(Member{Deleted: true})
 	fmt.Printf("update success rows:%d\n", ret.RowsAffected)
 }

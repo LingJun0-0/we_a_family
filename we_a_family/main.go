@@ -17,5 +17,4 @@ func main() {
 	global.Log = core.Initlogger()
 	//初始化连接数据库
 	global.DB = core.InitGorm()
-
 }
