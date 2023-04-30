@@ -6,7 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"os"
 	"path"
-	"we_a_family/we_a_family/global"
+	"we_a_family/global"
 )
 
 const (
@@ -55,6 +55,18 @@ func (t *LogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+func InitDefaultLogger() {
+	//全局log
+	logrus.SetOutput(os.Stdout)                            //设置输出类型
+	logrus.SetReportCaller(global.Config.Logger.Show_line) //开启返回函数名和行号
+	logrus.SetFormatter(&LogFormatter{})                   //设置自己定义的Formatter
+	level, err := logrus.ParseLevel(global.Config.Logger.Level)
+	if err != nil {
+		level = logrus.InfoLevel
+	}
+	logrus.SetLevel(level) //设置最低的level
+}
+
 func Initlogger() *logrus.Logger {
 	mLog := logrus.New()                                 //新建一个实例
 	mLog.SetOutput(os.Stdout)                            //设置输出类型
@@ -68,16 +80,4 @@ func Initlogger() *logrus.Logger {
 	InitDefaultLogger()
 	return mLog
 
-}
-
-func InitDefaultLogger() {
-	//全局log
-	logrus.SetOutput(os.Stdout)                            //设置输出类型
-	logrus.SetReportCaller(global.Config.Logger.Show_line) //开启返回函数名和行号
-	logrus.SetFormatter(&LogFormatter{})                   //设置自己定义的Formatter
-	level, err := logrus.ParseLevel(global.Config.Logger.Level)
-	if err != nil {
-		level = logrus.InfoLevel
-	}
-	logrus.SetLevel(level) //设置最低的level
 }
