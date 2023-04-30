@@ -3,6 +3,7 @@ package main
 import (
 	"we_a_family/we_a_family/core"
 	"we_a_family/we_a_family/global"
+	"we_a_family/we_a_family/routers"
 )
 
 func main() {
@@ -17,4 +18,7 @@ func main() {
 	global.Log = core.Initlogger()
 	//初始化连接数据库
 	global.DB = core.InitGorm()
+	//初始化Router
+	router := routers.InitRouters()
+	router.Run()
 }

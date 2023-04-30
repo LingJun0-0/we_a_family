@@ -60,25 +60,23 @@ func InsertOneMember(username string, password string) (err error) {
 }
 
 // 更新一个用户名和密码
-func UpdateOneMember(username, password string) {
-	ret, err := FindOneMember(username)
-	if err != nil {
-		fmt.Printf("find failed err:%s\n", err)
-	}
-	res := global.DB.Model(&ret).Select("username", "password", "updated_at").Updates(Member{Username: username, Password: password, Updated_at: time.Now().Format(global.TimeFormat)})
+func UpdateOneMember(id int, username, password string, delete bool) error {
+	res := global.DB.Model(&Member{}).Where("id = ?", id).Select("username", "password", "delete", "updated_at").Updates(Member{Username: username, Password: password, Deleted: delete, Updated_at: time.Now().Format(global.TimeFormat)})
 	if res.Error != nil {
 		fmt.Printf("save failed err:%s\n", res.Error)
+		return res.Error
 	}
 	fmt.Printf("update success rows:%d\n", res.RowsAffected)
+	return nil
 }
 
 // 删除一个用户需要用户名
-func DelOneMember(username string) {
-	res, err := FindOneMember(username)
-	if err != nil {
-		fmt.Printf("find failed err:%s\n", err)
-		return
+func DelOneMember(id int) error {
+	ret := global.DB.Model(&Member{}).Where("id = ?", id).Select("deleted").Updates(Member{Deleted: true})
+	if ret.Error != nil {
+		fmt.Printf("save failed err:%s\n", ret.Error)
+		return ret.Error
 	}
-	ret := global.DB.Model(&res).Select("deleted").Updates(Member{Deleted: true})
 	fmt.Printf("update success rows:%d\n", ret.RowsAffected)
+	return nil
 }
