@@ -17,15 +17,23 @@ type Member struct {
 	Deleted    bool   `gorm:"false"`
 }
 
-//按用户名查一个
+//第一次查用户按用户名
 func FindOneMember(username string) (Member, error) {
 	var m Member
 	err := global.DB.Where("username = ?", username).First(&m)
 	if err.Error != nil {
 		fmt.Printf("findone member failed err :%s\n", err.Error)
 	}
-	if m.Deleted != false {
-		fmt.Printf("member deleted is ture", m.Deleted)
+	fmt.Printf("findone member info %v\n", m)
+	return m, err.Error
+}
+
+//按用户id查用户信息
+func FindOneMemberUserId(id int) (Member, error) {
+	var m Member
+	err := global.DB.Where("id = ?", id).First(&m)
+	if err.Error != nil {
+		fmt.Printf("findone member failed err :%s\n", err.Error)
 	}
 	fmt.Printf("findone member info %v\n", m)
 	return m, err.Error
@@ -42,7 +50,7 @@ func FindsAllMember() []Member {
 	return s
 }
 
-// 插入一条数据
+// 跟据输入的用户名和密码插入一条新数据
 func InsertOneMember(username string, password string) (err error) {
 	m := Member{Username: username, Password: password, Status: 1, Deleted: false, Created_at: time.Now().Format(global.TimeFormat), Updated_at: time.Now().Format(global.TimeFormat)}
 	res := global.DB.Create(&m)
@@ -59,7 +67,7 @@ func InsertOneMember(username string, password string) (err error) {
 	return nil
 }
 
-// 更新一个用户名和密码
+// 更新一个用户的用户名，密码，delete状态
 func UpdateOneMember(id int, username, password string, delete bool) error {
 	res := global.DB.Model(&Member{}).Where("id = ?", id).Select("username", "password", "delete", "updated_at").Updates(Member{Username: username, Password: password, Deleted: delete, Updated_at: time.Now().Format(global.TimeFormat)})
 	if res.Error != nil {
@@ -70,7 +78,7 @@ func UpdateOneMember(id int, username, password string, delete bool) error {
 	return nil
 }
 
-// 删除一个用户需要用户名
+// 按id删除一个用户
 func DelOneMember(id int) error {
 	ret := global.DB.Model(&Member{}).Where("id = ?", id).Select("deleted").Updates(Member{Deleted: true})
 	if ret.Error != nil {
