@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	Models "we_a_family/we_a_family/models"
 )
 
 //尽量只是把需求重导向具体的方法并返回结果到具体界面,不要处理数据
@@ -26,10 +27,10 @@ func register_url(router *gin.Engine) {
 	})
 
 	// html load
-	router.LoadHTMLGlob("D:\\study\\gitpro\\we_a_family\\we_a_family\\templates\\*")
-	//router.LoadHTMLFiles("D:\\study\\gitpro\\we_a_family\\we_a_family\\templates\\index.html")
+	router.LoadHTMLGlob("templates/*.html")
+	//router.LoadHTMLFiles("/templates/*")
 	router.GET("/index", func(context *gin.Context) {
-		context.HTML(http.StatusOK, "index.html", gen_title_by_num())
+		context.HTML(http.StatusOK, "index.html", Models.Gen_title_by_num())
 	})
 
 	return
