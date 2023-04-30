@@ -1,21 +1,24 @@
 package main
 
-import "fmt"
+import (
+	"we_a_family/we_a_family/core"
+	"we_a_family/we_a_family/global"
+	"we_a_family/we_a_family/routers"
+)
 
 func main() {
+	/*方法执行顺序
+	1，先读取配置文件
+	2，初始化各个组件
+	*/
 
-	//连接数据库
-	err := InitDB()
-	if err != nil {
-		fmt.Printf("connection mysql db failed:%s", err)
-	}
-	fmt.Println("connection mysql db success")
-	//main函数结束前数据库连接关闭
-	defer Close()
-
-	router := getGinApp()
-	//router := get2()
-	//router := gin.Default()
-
-	router.Run() // 监听并在 0.0.0.0:8080 上启动服务
+	//读取配置文件
+	core.InitConf()
+	//初始化日志
+	global.Log = core.Initlogger()
+	//初始化连接数据库
+	global.DB = core.InitGorm()
+	//初始化Router
+	router := routers.InitRouters()
+	router.Run()
 }
