@@ -12,4 +12,6 @@ logger:
   show_line: true
   log_in_console: true
 system:
-  env: dev
+  host: 0,0,0,0
+  port: 8080
+  env: release
