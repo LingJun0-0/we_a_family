@@ -1,6 +1,8 @@
 package config
 
-import "strconv"
+import (
+	"strconv"
+)
 
 type System struct {
 	Host string `yaml:"host"`
