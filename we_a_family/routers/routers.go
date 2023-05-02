@@ -25,7 +25,7 @@ func InitRouters() *gin.Engine {
 		id := c.Param("id")
 		id1, _ := strconv.Atoi(id)
 		m, _ := Models.FindOneMemberUseId(id1)
-		c.JSON(http.StatusOK, m.Id)
+		c.JSON(http.StatusOK, m.Username)
 	})
 	Router.GET("/findall", func(c *gin.Context) {
 		m := Models.FindsAllMember()
