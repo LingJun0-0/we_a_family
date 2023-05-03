@@ -6,5 +6,5 @@ import (
 )
 
 func (SettingsApi) SettingsInfoView(c *gin.Context) {
-	utils.FailwithCode(utils.SettingsError, c)
+	utils.OkwithData(utils.SettingsError, c)
 }

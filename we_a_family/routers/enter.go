@@ -18,5 +18,7 @@ func InitRouters() *gin.Engine {
 	//路由分层
 	//系统配置API
 	routerGroupApp.SettingsRouter()
+	//用户API
+	routerGroupApp.MemberRouter()
 	return router
 }
