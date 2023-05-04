@@ -6,6 +6,7 @@ import (
 
 func (router RouterGroup) MemberRouter() {
 	memberApi := api.ApiGroupApp.MemberApi
-	router.GET("memberlogin/", memberApi.MemberLoginInfoView)
-	router.GET("findall/", memberApi.MemberFindAll)
+	router.GET("login/", memberApi.MemberLoginInfoView)
+	router.GET("memberlist/", memberApi.MemberFindAll)
+	router.GET("insert/:username/:password", memberApi.InsertMemberView)
 }
