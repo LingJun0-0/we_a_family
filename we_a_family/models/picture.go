@@ -1,13 +1,11 @@
 package Models
 
-import "time"
-
 type Picture struct {
-	Id         int `gorm:"primary_key"`
-	Name       string
-	Url        string
-	Created_at time.Time
-	Updated_at time.Time
-	Tag        []Tag  `gorm:"column:created_at;type:datetime"` //创建者ID
-	Perm       []Perm `gorm:"column:updated_at;type:datetime"` //创建者ID
+	Id        int `gorm:"primary_key"`
+	Name      string
+	Url       string
+	CreatedAt string `gorm:"column:created_at;type:datetime"`
+	UpdatedAt string `gorm:"column:updated_at;type:datetime"`
+	Tag       []Tag  `gorm:"foreignKey:PictureId"`
+	Perm      []Perm `gorm:"foreignKey:ResourcesId"`
 }

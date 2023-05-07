@@ -7,40 +7,90 @@ import (
 	"we_a_family/we_a_family/utils"
 )
 
-func (MemberApi) MemberLoginInfoView(c *gin.Context) {
-	username := c.Param("username")
+func (MemberApi) MemberLoginInfoView(ctx *gin.Context) {
+	username := ctx.Param("username")
 	username1, _ := strconv.Atoi(username)
-	password := c.Param("password")
-	m, _ := Models.LoginFindMember(username1)
-	if m.Password == password {
-		utils.OkwithData(m, c)
+	password := ctx.Param("password")
+	member, err := Models.LoginFindMember(username1)
+	if err != nil {
+		utils.FailwithCode(utils.MemberDoesNotExist, ctx)
+	} else if member.Deleted {
+		utils.FailwithCode(utils.DeletedMember, ctx)
+	} else if member.Password == password {
+		utils.OkwithData(member, ctx)
 	} else {
-		utils.FailwithCode(utils.LoginError, c)
+		utils.FailwithCode(utils.NameOrPwdNotRight, ctx)
 	}
 }
 
-func (MemberApi) MemberFindAll(c *gin.Context) {
-	m := Models.FindsAllMember()
-	for _, m1 := range m {
-		if m1.Deleted {
-			utils.FailwithCode(utils.LoginError, c)
+func (MemberApi) MemberFindAll(ctx *gin.Context) {
+	members := Models.FindsAllMember()
+	for _, member := range members {
+		if member.Deleted {
+			utils.FailwithCode(utils.ListError, ctx)
 		} else {
-			utils.OkwithData(m1, c)
+			utils.OkwithData(member, ctx)
 		}
 	}
 }
 
-func (MemberApi) InsertMemberView(c *gin.Context) {
-	username := c.Param("username")
+func (MemberApi) InsertMemberView(ctx *gin.Context) {
+	username := ctx.Param("username")
 	username1, _ := strconv.Atoi(username)
-	password := c.Param("password")
-	err := Models.InsertOneMember(username1, password)
+	password := ctx.Param("password")
+	member, err := Models.LoginFindMember(username1)
 	if err != nil {
-		utils.FailwithCode(utils.LoginError, c)
+		err = Models.InsertOneMember(username1, password)
+		if err != nil {
+			utils.FailwithCode(utils.RegisterError, ctx)
+		} else {
+			member, _ := Models.LoginFindMember(username1)
+			utils.OkwithData(member, ctx)
+		}
+	} else if member.Deleted {
+		utils.FailwithCode(utils.DeletedMember, ctx)
 	} else {
-		member, _ := Models.LoginFindMember(username1)
-		utils.OkwithData(member, c)
-
+		utils.FailwithCode(utils.RegisterAgainError, ctx)
 	}
 
+}
+
+func (MemberApi) UpdateMemberView(ctx *gin.Context) {
+	username := ctx.Param("username")
+	username1, _ := strconv.Atoi(username)
+	password := ctx.Param("password")
+	member, _ := Models.LoginFindMember(username1)
+	if member.Deleted {
+		utils.FailwithCode(utils.DeletedMember, ctx)
+	} else if member.Password == password {
+		utils.OkwithData(member, ctx)
+	} else {
+		utils.FailwithCode(utils.NameOrPwdNotRight, ctx)
+	}
+}
+
+func (MemberApi) DeleteMemberView(ctx *gin.Context) {
+	username := ctx.Param("username")
+	username1, _ := strconv.Atoi(username)
+	password := ctx.Param("password")
+	member, err := Models.LoginFindMember(username1)
+	if err != nil {
+		utils.FailwithCode(utils.MemberDoesNotExist, ctx)
+	} else if member.Deleted {
+		utils.FailwithCode(utils.DeletedMember, ctx)
+	} else if member.Password == password {
+		id := member.Id
+		changeUsername := ctx.Param("cusername")
+		changeUsername1, _ := strconv.Atoi(changeUsername)
+		changePwd := ctx.Param("cpwd")
+		err := Models.UpdateOneMemberById(id, changeUsername1, changePwd, false)
+		if err != nil {
+			utils.FailwithCode(utils.ChangeError, ctx)
+		} else {
+			member, err = Models.FindOneMemberById(id)
+			utils.OkwithData(member, ctx)
+		}
+	} else {
+		utils.FailwithCode(utils.NameOrPwdNotRight, ctx)
+	}
 }

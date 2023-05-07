@@ -25,7 +25,7 @@ func LoginFindMember(username int) (Member, error) {
 	var m Member
 	err := global.DB.Where("username = ?", username).First(&m)
 	if err.Error != nil {
-		fmt.Printf("findone member failed err :%s\n", err.Error)
+		return m, err.Error
 	}
 	return m, err.Error
 }
@@ -35,7 +35,7 @@ func FindOneMemberById(id int) (Member, error) {
 	var m Member
 	err := global.DB.Where("id = ?", id).First(&m)
 	if err.Error != nil {
-		fmt.Printf("findone member failed err :%s\n", err.Error)
+		return m, err.Error
 	}
 	return m, err.Error
 }
@@ -56,7 +56,6 @@ func InsertOneMember(username int, password string) (err error) {
 	m := Member{Username: username, Password: password, Status: 1, Deleted: false, CreatedAt: time.Now().Format(utils.Timestemp), UpdatedAt: time.Now().Format(utils.Timestemp)}
 	res := global.DB.Create(&m)
 	if res.Error != nil {
-		fmt.Printf("Create insert failed err:%s\n", res.Error)
 		return res.Error
 	}
 
@@ -67,10 +66,8 @@ func InsertOneMember(username int, password string) (err error) {
 func UpdateOneMemberById(id, username int, password string, delete bool) error {
 	res := global.DB.Model(&Member{}).Where("id = ?", id).Select("username", "password", "delete", "updated_at").Updates(Member{Username: username, Password: password, Deleted: delete, UpdatedAt: time.Now().Format(utils.Timestemp)})
 	if res.Error != nil {
-		fmt.Printf("save failed err:%s\n", res.Error)
 		return res.Error
 	}
-	fmt.Printf("update success rows:%d\n", res.RowsAffected)
 	return nil
 }
 
@@ -78,9 +75,7 @@ func UpdateOneMemberById(id, username int, password string, delete bool) error {
 func DelOneMemberById(id int) error {
 	ret := global.DB.Model(&Member{}).Where("id = ?", id).Select("deleted").Updates(Member{Deleted: true})
 	if ret.Error != nil {
-		fmt.Printf("save failed err:%s\n", ret.Error)
 		return ret.Error
 	}
-	fmt.Printf("update success rows:%d\n", ret.RowsAffected)
 	return nil
 }

@@ -11,7 +11,6 @@ func main() {
 	//初始化连接数据库
 	global.DB = core.InitGorm()
 	//数据结构models建数据库表并映射外键关系
-	global.DB.AutoMigrate(&Models.Member{}, &Models.Tag{})
-	global.DB.AutoMigrate(&Models.TagMember{})
+	global.DB.AutoMigrate(&Models.Member{}, &Models.Picture{}, &Models.Perm{}, &Models.Tag{})
 
 }
