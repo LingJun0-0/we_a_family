@@ -59,11 +59,21 @@ func (MemberApi) UpdateMemberView(ctx *gin.Context) {
 	username := ctx.Param("username")
 	username1, _ := strconv.Atoi(username)
 	password := ctx.Param("password")
-	member, _ := Models.LoginFindMember(username1)
-	if member.Deleted {
-		utils.FailwithCode(utils.DeletedMember, ctx)
+	member, err := Models.LoginFindMember(username1)
+	if err != nil {
+		utils.FailwithCode(utils.MemberDoesNotExist, ctx)
 	} else if member.Password == password {
-		utils.OkwithData(member, ctx)
+		id := member.Id
+		changeUsername := ctx.Param("cusername")
+		changeUsername1, _ := strconv.Atoi(changeUsername)
+		changePassword := ctx.Param("cpwd")
+		err := Models.UpdateOneMemberById(id, changeUsername1, changePassword, false)
+		if err != nil {
+			utils.FailwithCode(utils.ChangeError, ctx)
+		} else {
+			member, err = Models.FindOneMemberById(id)
+			utils.OkwithData(member, ctx)
+		}
 	} else {
 		utils.FailwithCode(utils.NameOrPwdNotRight, ctx)
 	}
@@ -80,12 +90,9 @@ func (MemberApi) DeleteMemberView(ctx *gin.Context) {
 		utils.FailwithCode(utils.DeletedMember, ctx)
 	} else if member.Password == password {
 		id := member.Id
-		changeUsername := ctx.Param("cusername")
-		changeUsername1, _ := strconv.Atoi(changeUsername)
-		changePwd := ctx.Param("cpwd")
-		err := Models.UpdateOneMemberById(id, changeUsername1, changePwd, false)
+		err := Models.DelOneMemberById(id)
 		if err != nil {
-			utils.FailwithCode(utils.ChangeError, ctx)
+			utils.FailwithCode(utils.DeleteError, ctx)
 		} else {
 			member, err = Models.FindOneMemberById(id)
 			utils.OkwithData(member, ctx)

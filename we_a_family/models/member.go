@@ -13,7 +13,7 @@ type Member struct {
 	Username  int    `gorm:"not null;unique_index"`
 	Password  string `gorm:"type:varchar(255);not null"`
 	Status    int
-	Deleted   bool
+	Deleted   bool   `gorm:"column:deleted;type:tinyint(1)"`
 	CreatedAt string `gorm:"column:created_at;type:datetime"`
 	UpdatedAt string `gorm:"column:updated_at;type:datetime"`
 	Tag       []Tag  `gorm:"foreignKey:OwnerId"`
@@ -58,13 +58,12 @@ func InsertOneMember(username int, password string) (err error) {
 	if res.Error != nil {
 		return res.Error
 	}
-
 	return nil
 }
 
 // 更新一个用户的用户名，密码，delete状态
-func UpdateOneMemberById(id, username int, password string, delete bool) error {
-	res := global.DB.Model(&Member{}).Where("id = ?", id).Select("username", "password", "delete", "updated_at").Updates(Member{Username: username, Password: password, Deleted: delete, UpdatedAt: time.Now().Format(utils.Timestemp)})
+func UpdateOneMemberById(id, username int, password string, deleted bool) error {
+	res := global.DB.Model(&Member{}).Where("id = ?", id).Select("username", "password", "deleted", "updated_at").Updates(Member{Username: username, Password: password, Deleted: deleted, UpdatedAt: time.Now().Format(utils.Timestemp)})
 	if res.Error != nil {
 		return res.Error
 	}

@@ -9,10 +9,11 @@ const (
 	MemberDoesNotExist ErrorCode = 1002 //账号不存在
 	RegisterError      ErrorCode = 1003 //注册失败
 	ChangeError        ErrorCode = 1004 //更新失败
-	RegisterAgainError ErrorCode = 1005 //账号已存在
-	DeletedMember      ErrorCode = 1006 //账号为黑用户，请联系管理员
-	NameOrPwdNotRight  ErrorCode = 1007 //账号或密码不对
-	ListError          ErrorCode = 1008 //获取列表失败
+	DeleteError        ErrorCode = 1005 //删除失败
+	RegisterAgainError ErrorCode = 1006 //账号已存在
+	DeletedMember      ErrorCode = 1007 //账号为黑用户，请联系管理员
+	NameOrPwdNotRight  ErrorCode = 1008 //账号或密码不对
+	ListError          ErrorCode = 1009 //获取列表失败
 
 )
 
@@ -22,6 +23,7 @@ var (
 		MemberDoesNotExist: "账号不存在请注册",
 		RegisterError:      "注册失败",
 		ChangeError:        "更新失败",
+		DeleteError:        "删除失败",
 		RegisterAgainError: "账号已存在请登录",
 		DeletedMember:      "账号为黑用户，请联系管理员",
 		NameOrPwdNotRight:  "账号或密码不对",
