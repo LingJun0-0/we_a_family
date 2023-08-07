@@ -28,6 +28,10 @@ func OK(data any, msg string, c *gin.Context) {
 	Result(SUCCESS, data, msg, c)
 }
 
+func Okwith(c *gin.Context) {
+	Result(SUCCESS, map[string]any{}, "成功", c)
+}
+
 func OkwithData(data any, c *gin.Context) {
 	Result(SUCCESS, data, "成功", c)
 }
