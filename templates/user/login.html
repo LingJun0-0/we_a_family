@@ -1,0 +1,99 @@
+{{define "user/login.html"}}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>登录界面</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+
+    .form-group button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      text-align: center;
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+
+    }
+    .error-message {
+      color: red;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>登录</h2>
+  <form id="loginForm" action="http://localhost:8080/api/login" method="post">
+    <div class="error-message">{{.zhuce}}</div>
+    <div class="form-group">
+      <label for="username">用户名:</label>
+      <input type="text" id="username" name="username" required>
+    </div>
+    <div class="form-group">
+      <label for="password">密码:</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+    <div class="form-group">
+      <button type="submit">登录</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  document.getElementById("loginForm").addEventListener("submit", function(event) {
+    // event.preventDefault(); // 阻止表单默认提交行为
+    // var username = document.getElementById("username").value;
+    // var password = document.getElementById("password").value;
+    // 在这里进行验证和处理登录逻辑的代码（例如发送到后端进行验证）
+    // console.log("Username:", username);
+    // console.log("Password:", password);
+  });
+</script>
+</body>
+</html>
+{{end}}
