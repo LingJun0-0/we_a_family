@@ -1,5 +1,5 @@
 mysql:
-  host: 43.143.53.75
+  host: 127.0.0.1
   port: 3306
   db: we_a_family
   user: newuser
@@ -17,4 +17,9 @@ system:
   env: release
 upload:
   size: 2
-  path: we_a_family/uploads
+  path: we_a_family/picture/uploads
+download:
+  size: 2
+  path: we_a_family/picture/downloads
+JwtSecret:
+  auth: 'auth'

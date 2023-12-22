@@ -21,4 +21,5 @@ func main() {
 	//初始化Router
 	router := routers.InitRouters()
 	router.Run()
+
 }

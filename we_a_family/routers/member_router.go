@@ -2,17 +2,18 @@ package routers
 
 import (
 	"we_a_family/we_a_family/api"
+	"we_a_family/we_a_family/service"
 )
 
 func (router RouterGroup) MemberRouter() {
-	memberApi := api.ApiGroupApp.MemberApi
-	//router.GET("login/", memberApi.MemberLoginInfoView)
-	router.POST("login/", memberApi.MemberLoginInfoView)
-	router.GET("memberList/", memberApi.MemberFindAll)
-	router.POST("insert/", memberApi.InsertMemberView)
-	router.PATCH("update/", memberApi.UpdateMemberView)
-	router.DELETE("delete/", memberApi.DeleteMemberView)
-
-	router.GET("/", memberApi.LoadMemberLoginHtml)
+	memberApi := api.GroupApp.MemberApi
+	router.GET("user/login", memberApi.MemberLoginView)
+	router.POST("user/register", memberApi.RegisterMemberView)
+	router.PATCH("user/update/:id", memberApi.UpdateMemberSelfView)
+	router.Use(service.Auth)
+	router.GET("user/memberList", memberApi.MemberFindAllView)
+	router.POST("user/insert", memberApi.InsertMemberView)
+	router.PATCH("user/update", memberApi.UpdateMemberView)
+	router.DELETE("user/delete", memberApi.DeleteMemberView)
 
 }

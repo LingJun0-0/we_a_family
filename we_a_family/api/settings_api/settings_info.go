@@ -2,9 +2,12 @@ package settings_api
 
 import (
 	"github.com/gin-gonic/gin"
-	"we_a_family/we_a_family/utils"
+	"we_a_family/we_a_family/service"
 )
 
-func (SettingsApi) SettingsInfoView(c *gin.Context) {
-	utils.OkwithData(utils.SettingsError, c)
+type SettingsApi struct {
+}
+
+func (SettingsApi) SettingsInfoView(ctx *gin.Context) {
+	service.SettingsInfoService(ctx)
 }

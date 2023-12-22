@@ -16,8 +16,8 @@ type Response struct {
 	Msg  string `json:"msg"`
 }
 
-func Result(code int, data any, msg string, c *gin.Context) {
-	c.JSON(http.StatusOK, Response{
+func Result(code int, data any, msg string, ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, Response{
 		Code: code,
 		Data: data,
 		Msg:  msg,
