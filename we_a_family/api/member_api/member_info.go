@@ -12,12 +12,12 @@ func (MemberApi) MemberLoginView(ctx *gin.Context) {
 	service.MemberLoginService(ctx)
 }
 
-func (MemberApi) MemberFindAllView(ctx *gin.Context) {
-	service.MemberFindAllService(ctx)
-}
-
 func (MemberApi) RegisterMemberView(ctx *gin.Context) {
 	service.RegisterMemberService(ctx)
+}
+
+func (MemberApi) MemberFindAllView(ctx *gin.Context) {
+	service.MemberFindAllService(ctx)
 }
 
 func (MemberApi) InsertMemberView(ctx *gin.Context) {
@@ -30,9 +30,4 @@ func (MemberApi) UpdateMemberSelfView(ctx *gin.Context) {
 
 func (MemberApi) DeleteMemberView(ctx *gin.Context) {
 	service.DeleteMemberService(ctx)
-}
-
-func (MemberApi) UpdateMemberView(ctx *gin.Context) {
-	service.UpdateMemberService(ctx)
-
 }

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"we_a_family/we_a_family/global"
+	"we_a_family/we_a_family/utils"
 )
 
 const (
@@ -41,7 +42,7 @@ func (t *LogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	}
 	log := global.Config.Logger
 	//自定义日期格式
-	timestamp := entry.Time.Format("2006-01-02 15:04:05")
+	timestamp := entry.Time.Format(utils.Timestamp)
 	if entry.HasCaller() {
 		//自定义文件路径
 		funcVal := entry.Caller.Function

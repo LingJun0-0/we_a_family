@@ -8,89 +8,211 @@ import (
 )
 
 // FindOneTagById 按标签 id 查标签信息
-func FindOneTagById(Id int) (Models.Tag, error) {
+func FindOneTagById(id int) (Models.Tag, error) {
 	var t Models.Tag
-	err := global.DB.Where("id = ?", Id).Find(&t)
-	if err.Error != nil {
-		return t, err.Error
-	}
-	return t, err.Error
+	err := global.DB.Model(&t).Find(&t, id).Error
+	return t, err
 }
 
-// FindTagWithOwnerIdAndName   按标签 name,ownerId 查标签信息
-func FindTagWithOwnerIdAndName(ownerId int, name string) (Models.Tag, error) {
-	var t Models.Tag
-	err := global.DB.Where("name = ? AND owner_id = ?", name, ownerId).Find(&t)
-	if err.Error != nil {
-		return t, err.Error
-	}
-	return t, err.Error
-}
-
-func FindTagByTagName(name string) ([]Models.Tag, error) {
-	var t []Models.Tag
-	err := global.DB.Where("name = ?", name).Find(&t)
-	if err.Error != nil {
-		return t, err.Error
-	}
-	return t, err.Error
-}
-
-// FindAllTag  查询所有标签数据
-func FindAllTag() ([]Models.Tag, error) {
+func FindPicturesByTagName(name string) ([]Models.Tag, error) {
 	var tags []Models.Tag
-	rows := global.DB.Find(&tags)
-	if rows.Error != nil {
-		global.Log.Errorf("findsData failed err:%s\n", rows.Error)
-		return nil, rows.Error
-	}
-	return tags, nil
+	err := global.DB.Model(&tags).
+		Preload("Pictures").
+		Where("name like ?", "%"+name+"%").
+		Find(&tags).Error
+	return tags, err
 }
 
-// InsertOneTagWithOwnerId   跟据 name,des, ownerId 插入一条数据,需要判断数据库里是否有同名和同owner标签
-func InsertOneTagWithOwnerId(name, des string, ownerId int) (err error) {
-	var t Models.Tag
-	err = global.DB.Where(&Models.Tag{
-		Name:    name,
-		OwnerID: ownerId}).
-		First(&t).Error
-	if err == nil {
-		global.Log.Error("创建失败，该用户已存在相同标签")
-		return
-	} else {
-		t = Models.Tag{
+func FindPicturesByTagId(id int) ([]Models.Picture, error) {
+	var tag Models.Tag
+	err := global.DB.Model(&tag).
+		Preload("Pictures").
+		Find(&tag, id).Error
+	return tag.Pictures, err
+}
+
+func FindAllTagSelfByMemberId(username int) ([]Models.Tag, error) {
+	var member Models.Member
+	err := global.DB.Model(&member).
+		Preload("Tags.Pictures").
+		Find(&member, username).Error
+	if err != nil {
+		return nil, err
+	}
+	return member.Tags, nil
+}
+
+// FindAllTagInfo FindAllTag  查询所有标签数据
+func FindAllTagInfo() ([]Models.Tag, error) {
+	var tags []Models.Tag
+	err := global.DB.Model(Models.Tag{}).
+		Preload("Pictures.Tags").
+		Find(&tags).Error
+	return tags, err
+}
+
+func InsertOneTagWithNameAndDes(name, des string) (Models.Tag, error) {
+	t := Models.Tag{
+		Name:        name,
+		Description: des,
+		CreatedAt:   time.Now().Format(utils.Timestamp),
+		UpdatedAt:   time.Now().Format(utils.Timestamp)}
+	err := global.DB.Model(&t).Create(&t).Error
+	return t, err
+}
+
+func UpdateOneTagById(id int, name, des string) error {
+	err := global.DB.
+		Where(Models.Tag{Id: id}).
+		Updates(Models.Tag{
 			Name:        name,
 			Description: des,
-			OwnerID:     ownerId,
-			Deleted:     false,
-			CreatedAt:   time.Now().Format(utils.Timestemp),
-			UpdatedAt:   time.Now().Format(utils.Timestemp)}
-		res := global.DB.Create(&t)
-		if res.Error != nil {
-			return res.Error
+			UpdatedAt:   time.Now().Format(utils.Timestamp)}).Error
+	return err
+
+}
+
+func DelOneTagById(id int) error {
+	err := global.DB.Delete(Models.Tag{Id: id}).Error
+	return err
+}
+
+func DelTagByName(name string) error {
+	var tag Models.Tag
+	err := global.DB.Model(&tag).Where(Models.Tag{Name: name}).Delete(&tag).Error
+	return err
+}
+
+// FindAllTagPictureByTagId   查询指定 tagId 所有 Picture
+func FindAllTagPictureByTagId(tagId int) ([]Models.Picture, error) {
+	var tag Models.Tag
+	err := global.DB.Model(Models.Tag{}).
+		Preload("Pictures.Tags").
+		Where(Models.Tag{Id: tagId}).
+		Find(&tag).Error
+	if err != nil {
+		return nil, err
+	}
+	var pictures []Models.Picture
+	for _, picture := range tag.Pictures {
+		pictures = append(pictures, picture)
+	}
+	return pictures, err
+}
+
+// FindOneTagPictureByTagIdAndPictureId  查询指定 tagId 指定 PictureId
+func FindOneTagPictureByTagIdAndPictureId(tagId, pictureId int) (Models.Picture, error) {
+	var tag Models.Tag
+	var picture Models.Picture
+	err := global.DB.Model(Models.Tag{}).
+		Preload("Pictures.Tags").
+		Where(Models.Tag{Id: tagId}).
+		Find(&tag).Error
+	if err != nil {
+		return picture, err
+	}
+
+	for _, p := range tag.Pictures {
+		if p.Id == pictureId {
+			picture = p
 		}
 	}
-	return nil
+
+	return picture, err
 }
 
-// UpdateOneTagByOwnerId 更新标签的 name, des(描述)
-func UpdateOneTagById(Id int, name, des string, delete bool) error {
-	res := global.DB.Where("id = ? ", Id).
-		Select("name", "description", "deleted").
-		Updates(Models.Tag{Name: name, Description: des, Deleted: delete, UpdatedAt: time.Now().Format(utils.Timestemp)})
-	if res.Error != nil {
-		return res.Error
+// InsertOneTagPictureWithTagIdAndPictureId  添加 tag_pictures tagId ,pictureId
+func InsertOneTagPictureWithTagIdAndPictureId(tagId, pictureId int) error {
+	var tag Models.Tag
+	var p Models.Picture
+	err := global.DB.Model(Models.Tag{}).
+		Where(Models.Tag{Id: tagId}).
+		Find(&tag).Error
+	if err != nil {
+		return err
 	}
-	return nil
+	err = global.DB.First(&p, pictureId).Error
+	if err != nil {
+		return err
+	}
+	// 添加关联关系
+	err = global.DB.Model(&tag).Association("Pictures").Append(&p)
+	if err != nil {
+		return err
+	}
+	return err
 }
 
-// DelOneTagById 按id删除一行标签记录
-func DelOneTagById(id int) error {
-	ret := global.DB.Model(Models.Tag{}).
-		Where("id = ?", id).
-		Updates(Models.Tag{Deleted: true})
-	if ret.Error != nil {
-		return ret.Error
+// DelOneTagPictureByTagId  删除 tag_pictures username,pictureId
+func DelOneTagPictureByTagId(tagId, pictureId int) error {
+	var tag Models.Tag
+	err := global.DB.Model(&tag).Preload("Pictures").Find(&tag, tagId).Error
+	if err != nil {
+		return err
+	}
+	// 查找要删除的照片
+	var picture Models.Picture
+	err = global.DB.First(&picture, pictureId).Error
+	if err != nil {
+		return err
+	}
+	err = global.DB.Model(&tag).Association("Pictures").Delete(&picture)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+// UpdateOneTagPictureByTagId   更新 tag_pictures pictureId
+func UpdateOneTagPictureByTagId(tagId, oldPicturesId, newPicturesId int) error {
+	var tag Models.Tag
+	err := global.DB.Model(&tag).Preload("Pictures").Find(&tag, tagId).Error
+	if err != nil {
+		return err
+	}
+	// 查找要删除的旧照片
+	var oldPicture Models.Picture
+	err = global.DB.First(&oldPicture, oldPicturesId).Error
+	if err != nil {
+		return err
+	}
+	// 查找要添加的新照片
+	var newPicture Models.Picture
+	err = global.DB.First(&newPicture, newPicturesId).Error
+	if err != nil {
+		return err
+	}
+	err = global.DB.Model(&tag).Association("Pictures").Delete(&oldPicture)
+	if err != nil {
+		return err
+	}
+	err = global.DB.Model(&tag).Association("Pictures").Append(&newPicture)
+	if err != nil {
+		return err
 	}
 	return nil
+
+}
+
+// DelTagPictureByTagId  删除 tag_pictures tagId
+func DelTagPictureByTagId(tagId int) error {
+	var tag Models.Tag
+	err := global.DB.Model(&tag).Preload("Pictures").Find(&tag, tagId).Error
+	if err != nil {
+		return err
+	}
+	err = global.DB.Model(&tag).Association("Pictures").Delete(&tag.Pictures)
+	return err
+}
+
+// DelMemberTagByTagId  删除 tag_pictures tagId
+func DelMemberTagByTagId(tagId int) error {
+	var tag Models.Tag
+	err := global.DB.Model(&tag).Preload("Members").Find(&tag, tagId).Error
+	if err != nil {
+		return err
+	}
+	err = global.DB.Model(&tag).Association("Members").Delete(&tag.Members)
+	return err
 }

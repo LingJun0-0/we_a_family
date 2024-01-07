@@ -8,7 +8,7 @@ import (
 type ImageApi struct {
 }
 
-// ImageUploadView 上传单个图片
+// ImageUploadView 上传图片
 func (ImageApi) ImageUploadView(ctx *gin.Context) {
 	service.ImageUploadService(ctx)
 
@@ -17,7 +17,6 @@ func (ImageApi) ImageUploadView(ctx *gin.Context) {
 // ImageDownloadView 下载单个图片(根据照片名字)
 func (ImageApi) ImageDownloadView(ctx *gin.Context) {
 	service.ImageDownloadService(ctx)
-
 }
 
 // ImageFindAllView 查找目录下所有图片

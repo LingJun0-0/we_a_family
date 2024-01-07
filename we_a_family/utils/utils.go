@@ -1,6 +1,8 @@
 package utils
 
-import "os"
+import (
+	"os"
+)
 
 func InList(key string, list []string) bool {
 	for _, s := range list {

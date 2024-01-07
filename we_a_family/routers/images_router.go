@@ -7,6 +7,8 @@ import (
 
 func (router RouterGroup) ImageRouter() {
 	imagesApi := api.GroupApp.ImagesApi
+
+	//路由鉴权
 	router.Use(service.Auth)
 	router.GET("images/findAll", imagesApi.ImageFindAllView)
 	router.POST("images/upload", imagesApi.ImageUploadView)

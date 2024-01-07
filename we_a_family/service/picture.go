@@ -12,6 +12,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 	"we_a_family/we_a_family/global"
 	Models "we_a_family/we_a_family/models"
 	"we_a_family/we_a_family/repository"
@@ -30,27 +31,23 @@ var (
 		".svg",
 		".webp",
 	}
+	wg sync.WaitGroup
 )
-
-type FileResponse struct {
-	FileName  string `json:"file_name"`  //文件名
-	IsSuccess bool   `json:"is_success"` //是否成功
-	Msg       string `json:"msg"`        //消息
-}
 
 // ImageUploadService 上传图片
 func ImageUploadService(ctx *gin.Context) {
 	memberId, ok := ctx.Get("memberId")
 	if !ok {
-		utils.FailwithCode(utils.MemberDoesNotExist, ctx)
+		utils.FailwithMessage("当前用户非法", ctx)
 		return
 	}
-	member, err := repository.FindOneMemberById(memberId.(int))
+	perm, err := repository.GetOnePermissionByResourceIdAndDescription(memberId.(int), utils.Picture)
 	if err != nil {
 		utils.FailwithMessage(err.Error(), ctx)
 		return
 	}
-	if member.Status >= int(utils.MemberStatusCode1) {
+
+	if perm.Code >= int(utils.Writer) && perm.Code <= int(utils.Admin) {
 
 		form, err := ctx.MultipartForm()
 		if err != nil {
@@ -58,26 +55,26 @@ func ImageUploadService(ctx *gin.Context) {
 			return
 		}
 		// form表单里名字为images的文件列表
-		filelist, ok := form.File["images"]
+		fileList, ok := form.File["images"]
 		if !ok {
 			utils.FailwithMessage("不存在文件", ctx)
 			return
 		}
 
-		// 检查 upload 是否已存在文件
+		// 检查是否存在文件夹
 		err = utils.DirectoryIfNotExists(global.Config.Upload.Path)
 		if err != nil {
 			utils.FailwithMessage("无法创建目录: "+err.Error(), ctx)
 			return
 		}
 
-		var resList []FileResponse
+		var resList []Models.FileResponse
 		// 可一次上传多个图片
-		for _, file := range filelist {
+		for _, file := range fileList {
 			// 检查文件合法性
 			err := validateFile(file)
 			if err != nil {
-				resList = append(resList, FileResponse{
+				resList = append(resList, Models.FileResponse{
 					FileName:  file.Filename,
 					IsSuccess: false,
 					Msg:       err.Error(),
@@ -90,7 +87,7 @@ func ImageUploadService(ctx *gin.Context) {
 			//判断图片大小
 			size := float64(file.Size) / float64(1024*1024)
 			if size >= float64(global.Config.Upload.Size) {
-				resList = append(resList, FileResponse{
+				resList = append(resList, Models.FileResponse{
 					FileName:  file.Filename,
 					IsSuccess: false,
 					Msg:       fmt.Sprintf("图片超过设定大小，当前大小为%.2fMB, 设定大小为：%d MB", size, global.Config.Upload.Size),
@@ -106,23 +103,33 @@ func ImageUploadService(ctx *gin.Context) {
 			byteData, err := io.ReadAll(fileObj)
 			md5String := utils.Md5(byteData)
 			// 保存照片名字，MD5，路径到数据库
-			if err = repository.InsertOnePicture(file.Filename, md5String, global.Config.Upload.Path); err != nil {
-				global.Log.Error(err.Error())
+			if _, err = repository.InsertOnePicture(file.Filename, md5String, global.Config.Upload.Path); err != nil {
+				utils.FailwithMessage(err.Error(), ctx)
+				return
+			}
+			picture, err := repository.FindPicturesByNameAndCode(file.Filename, md5String)
+			if err != nil {
+				utils.FailwithMessage(err.Error(), ctx)
+				return
+			}
+			err = repository.InsertOneMemberPictureByUsernameAndPictureId(memberId.(int), picture.Id)
+			if err != nil {
+				utils.FailwithMessage(err.Error(), ctx)
 				return
 			}
 
-			//SaveUploadedFile()里有os.MkdirAll(),未存在文件夹会自动创建
+			//保存文件到文件夹路径
 			err = ctx.SaveUploadedFile(file, filePath)
 			if err != nil {
 				global.Log.Error(err)
-				resList = append(resList, FileResponse{
+				resList = append(resList, Models.FileResponse{
 					FileName:  file.Filename,
 					IsSuccess: false,
 					Msg:       err.Error(),
 				})
 				continue
 			}
-			resList = append(resList, FileResponse{
+			resList = append(resList, Models.FileResponse{
 				FileName:  filePath,
 				IsSuccess: true,
 				Msg:       "上传成功",
@@ -130,6 +137,9 @@ func ImageUploadService(ctx *gin.Context) {
 
 		}
 		utils.OkwithData(resList, ctx)
+
+	} else {
+		utils.FailwithMessage("当前用户无上传权限", ctx)
 	}
 
 }
@@ -141,14 +151,15 @@ func ImageFindAllService(ctx *gin.Context) {
 		utils.FailwithCode(utils.MemberDoesNotExist, ctx)
 		return
 	}
-	member, err := repository.FindOneMemberById(memberId.(int))
+	perm, err := repository.GetOnePermissionByResourceIdAndDescription(memberId.(int), utils.Picture)
 	if err != nil {
 		utils.FailwithMessage(err.Error(), ctx)
 		return
 	}
-	if member.Status >= int(utils.MemberStatusCode4) {
 
-		var resList []FileResponse
+	if perm.Code == int(utils.Admin) {
+
+		var resList []Models.FileResponse
 		files, err := os.ReadDir(global.Config.Upload.Path)
 		if err != nil {
 			global.Log.Error(err.Error())
@@ -160,13 +171,13 @@ func ImageFindAllService(ctx *gin.Context) {
 			filePath := path.Join(global.Config.Upload.Path, fileName)
 			err = validateDownloadFile(file)
 			if err != nil {
-				resList = append(resList, FileResponse{
+				resList = append(resList, Models.FileResponse{
 					FileName:  filePath,
 					IsSuccess: false,
 					Msg:       "非法数据",
 				})
 			} else {
-				resList = append(resList, FileResponse{
+				resList = append(resList, Models.FileResponse{
 					FileName:  filePath,
 					IsSuccess: true,
 					Msg:       "加载成功",
@@ -176,22 +187,26 @@ func ImageFindAllService(ctx *gin.Context) {
 		}
 
 		utils.OkwithData(resList, ctx)
+	} else {
+		utils.FailwithMessage("用户权限限制", ctx)
 	}
+
 }
 
 // ImageDownloadService  下载图片(根据url传回数据库id)
 func ImageDownloadService(ctx *gin.Context) {
 	memberId, ok := ctx.Get("memberId")
 	if !ok {
-		utils.FailwithCode(utils.MemberDoesNotExist, ctx)
+		utils.FailwithMessage("当前用户非法", ctx)
 		return
 	}
-	member, err := repository.FindOneMemberById(memberId.(int))
+	perm, err := repository.GetOnePermissionByResourceIdAndDescription(memberId.(int), utils.Picture)
 	if err != nil {
 		utils.FailwithMessage(err.Error(), ctx)
 		return
 	}
-	if member.Status >= int(utils.MemberStatusCode1) {
+
+	if perm.Code >= int(utils.Writer) && perm.Code <= int(utils.Admin) {
 
 		// 检查 download 路径是否已存在,不存在就创建
 		err := utils.DirectoryIfNotExists(global.Config.Download.Path)
@@ -200,10 +215,11 @@ func ImageDownloadService(ctx *gin.Context) {
 			return
 		}
 
-		var resList []FileResponse
-		// 获取下载照片id，如果没有获取上传目录中所有照片，有则下载单张照片
+		var resList []Models.FileResponse
+		// 获取下载照片id，如果数据库没有该id,获取上传目录中所有照片，有则下载单张照片
 		id, err := strconv.Atoi(ctx.Param("id"))
 		if err != nil {
+			global.Log.Error(err.Error())
 			files, err := getFilesInUploadDirectory(ctx)
 			if err != nil {
 				global.Log.Error(err.Error())
@@ -214,14 +230,14 @@ func ImageDownloadService(ctx *gin.Context) {
 				downloadPath := path.Join(global.Config.Download.Path, file.Name())
 				err = copyFile(uploadPath, downloadPath)
 				if err != nil {
-					resList = append(resList, FileResponse{
+					resList = append(resList, Models.FileResponse{
 						FileName:  file.Name(),
 						IsSuccess: false,
 						Msg:       err.Error(),
 					})
 				}
 
-				resList = append(resList, FileResponse{
+				resList = append(resList, Models.FileResponse{
 					FileName:  downloadPath,
 					IsSuccess: true,
 					Msg:       "下载成功",
@@ -256,14 +272,14 @@ func ImageDownloadService(ctx *gin.Context) {
 
 							err = copyFile(DbPath, downloadPath)
 							if err != nil {
-								resList = append(resList, FileResponse{
+								resList = append(resList, Models.FileResponse{
 									FileName:  file.Name(),
 									IsSuccess: false,
 									Msg:       err.Error(),
 								})
 							}
 
-							resList = append(resList, FileResponse{
+							resList = append(resList, Models.FileResponse{
 								FileName:  downloadPath,
 								IsSuccess: true,
 								Msg:       "下载成功",
@@ -276,6 +292,9 @@ func ImageDownloadService(ctx *gin.Context) {
 			}
 		}
 		utils.OkwithData(resList, ctx)
+
+	} else {
+		utils.FailwithMessage("当前用户无下载权限", ctx)
 	}
 
 }
@@ -287,36 +306,50 @@ func ImageDeleteService(ctx *gin.Context) {
 		utils.FailwithCode(utils.MemberDoesNotExist, ctx)
 		return
 	}
-	member, err := repository.FindOneMemberById(memberId.(int))
+	perm, err := repository.GetOnePermissionByResourceIdAndDescription(memberId.(int), utils.Picture)
 	if err != nil {
 		utils.FailwithMessage(err.Error(), ctx)
 		return
 	}
-	if member.Status >= int(utils.MemberStatusCode4) {
 
-		id, _ := strconv.Atoi(ctx.Param("id"))
-		if err := repository.DelOnePictureById(id); err != nil {
+	if perm.Code == int(utils.Admin) {
+
+		pictureId, _ := strconv.Atoi(ctx.Param("pictureId"))
+		err := repository.DelOneMemberPictureByUsernameAndPictureId(memberId.(int), pictureId)
+		if err != nil {
+			utils.FailwithMessage(err.Error(), ctx)
+			return
+		}
+		err = repository.DelTagPictureByPictureId(pictureId)
+		if err != nil {
+			utils.FailwithMessage(err.Error(), ctx)
+			return
+		}
+		if err := repository.DelOnePictureById(pictureId); err != nil {
 			utils.FailwithMessage(err.Error(), ctx)
 			return
 		} else {
 			utils.OkwithMessage("删除成功", ctx)
 		}
+	} else {
+		utils.FailwithMessage("当前用户无删除权限", ctx)
 	}
+
 }
 
-// ImageUpdateService 修改数据库数据
 func ImageUpdateService(ctx *gin.Context) {
 	memberId, ok := ctx.Get("memberId")
 	if !ok {
 		utils.FailwithCode(utils.MemberDoesNotExist, ctx)
 		return
 	}
-	member, err := repository.FindOneMemberById(memberId.(int))
+	perm, err := repository.GetOnePermissionByResourceIdAndDescription(memberId.(int), utils.Picture)
 	if err != nil {
 		utils.FailwithMessage(err.Error(), ctx)
 		return
 	}
-	if member.Status >= int(utils.MemberStatusCode4) {
+
+	if perm.Code == int(utils.Admin) {
 		var p Models.Picture
 		err = ctx.ShouldBindJSON(&p)
 		if err != nil {

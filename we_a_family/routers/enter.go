@@ -25,6 +25,8 @@ func InitRouters() *gin.Engine {
 	routerGroupApp.ImageRouter()
 	//标签API
 	routerGroupApp.TagRouter()
+	//权限API
+	routerGroupApp.PermRouter()
 
 	return router
 }

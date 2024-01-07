@@ -1,66 +1,105 @@
 package repository
 
 import (
-	"fmt"
 	"time"
 	"we_a_family/we_a_family/global"
 	Models "we_a_family/we_a_family/models"
 	"we_a_family/we_a_family/utils"
 )
 
-// FindOnePictureById 按照片id查信息
 func FindOnePictureById(id int) (Models.Picture, error) {
 	var p Models.Picture
-	err := global.DB.Where("id = ?", id).Find(&p)
-	if err.Error != nil {
-		return p, err.Error
-	}
-	return p, err.Error
+	err := global.DB.Where(Models.Picture{Id: id}).Find(&p).Error
+	return p, err
 }
 
-// FindAllPicture  查询所有照片数据
-func FindAllPicture() []Models.Picture {
+func FindAllPicture() ([]Models.Picture, error) {
 	var pictures []Models.Picture
-	rows := global.DB.Find(&pictures)
-	if rows.Error != nil {
-		fmt.Printf("findsData failed err:%s\n", rows.Error)
-		return nil
-	}
-	return pictures
+	err := global.DB.Model([]Models.Picture{}).Find(&pictures).Error
+	return pictures, err
 }
 
-// InsertOnePicture  跟据 name,MD5, url 插入一条数据,需要判断数据库里是否有同名或者同MD5照片
-func InsertOnePicture(name, md5, url string) (err error) {
+func InsertOnePicture(name, code, url string) (Models.Picture, error) {
 	var p Models.Picture
-	err = global.DB.Where("name = ?", name).Or("code = ?", md5).First(&p).Error
-	if err == nil {
-		global.Log.Error("已存在相同照片")
-		return
-
-	} else {
-		p = Models.Picture{Name: name, Url: url, Code: md5, CreatedAt: time.Now().Format(utils.Timestemp), UpdatedAt: time.Now().Format(utils.Timestemp)}
-		res := global.DB.Create(&p)
-		if res.Error != nil {
-			return res.Error
-		}
-	}
-	return nil
+	p = Models.Picture{
+		Name:      name,
+		Url:       url,
+		Code:      code,
+		CreatedAt: time.Now().Format(utils.Timestamp),
+		UpdatedAt: time.Now().Format(utils.Timestamp)}
+	err := global.DB.Create(&p).Error
+	return p, err
 }
 
-// UpdateOnePictureById 更新一行照片的路径
+func FindPicturesByNameAndCode(name, code string) (Models.Picture, error) {
+	var picture Models.Picture
+	err := global.DB.Model(&picture).
+		Where(Models.Picture{Name: name, Code: code}).
+		Find(&picture).Error
+	if err != nil {
+		return picture, err
+	}
+
+	return picture, nil
+}
+
+func FindTagsByPictureId(id int) {
+
+}
+
 func UpdateOnePictureById(id int, name, url string) error {
-	res := global.DB.Model(&Models.Picture{}).Where("id = ?", id).Select("name", "url").Updates(Models.Picture{Name: name, Url: url, UpdatedAt: time.Now().Format(utils.Timestemp)})
-	if res.Error != nil {
-		return res.Error
-	}
-	return nil
+	err := global.DB.Model(&Models.Picture{}).
+		Where(Models.Picture{Id: id}).
+		Updates(Models.Picture{
+			Name:      name,
+			Url:       url,
+			UpdatedAt: time.Now().Format(utils.Timestamp)}).Error
+	return err
 }
 
-// DelOnePictureById 按id删除一行照片记录
-func DelOnePictureById(id int) error {
-	ret := global.DB.Delete(&Models.Picture{}, "id = ?", id)
-	if ret.Error != nil {
-		return ret.Error
+// UpdateOneTagPictureByPictureId    更新 tag_pictures tagId
+func UpdateOneTagPictureByPictureId(pictureId, oldTagId, newTagId int) error {
+	var picture Models.Picture
+	err := global.DB.Model(&picture).Preload("Tags").Find(&picture, pictureId).Error
+	if err != nil {
+		return err
+	}
+	// 查找要删除的旧照片
+	var oldTag Models.Tag
+	err = global.DB.First(&oldTag, oldTagId).Error
+	if err != nil {
+		return err
+	}
+	// 查找要添加的新照片
+	var newTag Models.Tag
+	err = global.DB.First(&newTag, newTagId).Error
+	if err != nil {
+		return err
+	}
+	err = global.DB.Model(&picture).Association("Tags").Delete(&oldTag)
+	if err != nil {
+		return err
+	}
+	err = global.DB.Model(&picture).Association("Tags").Append(&newTag)
+	if err != nil {
+		return err
 	}
 	return nil
+
+}
+
+func DelOnePictureById(id int) error {
+	err := global.DB.Delete(&Models.Picture{Id: id}).Error
+	return err
+}
+
+// DelTagPictureByPictureId  删除 tag_pictures pictureId
+func DelTagPictureByPictureId(pictureId int) error {
+	var picture Models.Picture
+	err := global.DB.Model(&picture).Preload("Tags").Find(&picture, pictureId).Error
+	if err != nil {
+		return err
+	}
+	err = global.DB.Model(&picture).Association("Tags").Delete(&picture.Tags)
+	return err
 }

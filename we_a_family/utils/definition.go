@@ -1,6 +1,9 @@
 package utils
 
-const Timestemp = "2006-01-02 15:04:05"
+const Timestamp = "2006-01-02 15:04:05"
+const GodUserName = 541513140112
+const TagOffset = 1 << 20
+const PictureOffset = 10 << 20
 
 type ErrorCode int
 
@@ -33,12 +36,24 @@ var (
 
 type StatusCode int
 
-// 用户权限 0-7，7为最高
+// 权限 0-5
 const (
-	MemberStatusCode0 StatusCode = 0 //0为黑用户权限
-	MemberStatusCode1 StatusCode = 1 //1为默认，仅可查看标签(及标签下的照片)
-	MemberStatusCode2 StatusCode = 2 //2为可修改标签的人(不能增和删)
-	MemberStatusCode3 StatusCode = 3 //3为标签拥有者（对标签及描述的增删改查）
-	MemberStatusCode4 StatusCode = 4 //4为系统管理员（对用户，标签，照片的增删改查）
-	MemberStatusCode5 StatusCode = 5 //5为系统所有者（任命系统管理员）
+	// Black 不可看不可写
+	// Reader 可看不可写(tag, picture)
+	// Writer 不可看可写(tag, picture)
+	// Owner 可看可写(self.tag, self.picture)
+	// Admin 可看可写(Reader, Writer, Owner, tag, picture)
+
+	Black  StatusCode = 0
+	Reader StatusCode = 1
+	Writer StatusCode = 2
+	Owner  StatusCode = 3
+	Admin  StatusCode = 4
+)
+
+const (
+	Member     = "member"
+	Picture    = "picture"
+	Tag        = "tag"
+	Permission = "permission"
 )

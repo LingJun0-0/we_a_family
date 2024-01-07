@@ -9,7 +9,7 @@ import (
 	"we_a_family/we_a_family/global"
 )
 
-//initConf 读取yaml文件的配置
+// InitConf 读取yaml文件的配置
 func InitConf() {
 	const ConfigFile = "settings.yaml"
 	c := &config.Config{}

@@ -27,7 +27,7 @@ func GenToken(userID int) (string, error) {
 	payload := Models.AuthPayload{
 		UserID: userID,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), // 有效期为 24 小时
+			ExpiresAt: time.Now().Add(time.Hour * 24 * 30).Unix(), // 有效期为 一个月
 			IssuedAt:  time.Now().Unix(),
 			Subject:   "auth",
 		},

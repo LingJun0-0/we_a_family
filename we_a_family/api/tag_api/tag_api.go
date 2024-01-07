@@ -12,8 +12,8 @@ func (TagApi) CreateTagView(ctx *gin.Context) {
 	service.CreateTagService(ctx)
 }
 
-func (TagApi) DeleteTagView(ctx *gin.Context) {
-	service.DeleteTagService(ctx)
+func (TagApi) DeleteSelfTagView(ctx *gin.Context) {
+	service.DeleteSelfTagService(ctx)
 }
 
 func (TagApi) UpdateTagView(ctx *gin.Context) {
@@ -21,9 +21,23 @@ func (TagApi) UpdateTagView(ctx *gin.Context) {
 }
 
 func (TagApi) FindTagView(ctx *gin.Context) {
-	service.FindTagService(ctx)
+	tagId := ctx.Query("tagId")
+	tagName := ctx.Query("tagName")
+	if tagName != "" {
+		service.FindPictureServiceByTagName(ctx)
+	}
+	if tagId != "" {
+		service.FindPicturesServiceByTagId(ctx)
+
+	} else {
+		service.FindTagServiceByMemberId(ctx)
+	}
 }
 
 func (TagApi) FindAllTagView(ctx *gin.Context) {
-	service.FindAllTagService(ctx)
+	service.FindAllTagsService(ctx)
+}
+
+func (TagApi) DeleteTagView(ctx *gin.Context) {
+	service.DeleteTag(ctx)
 }

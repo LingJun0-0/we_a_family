@@ -9,11 +9,12 @@ func (router RouterGroup) MemberRouter() {
 	memberApi := api.GroupApp.MemberApi
 	router.GET("user/login", memberApi.MemberLoginView)
 	router.POST("user/register", memberApi.RegisterMemberView)
-	router.PATCH("user/update/:id", memberApi.UpdateMemberSelfView)
+
+	//路由鉴权
 	router.Use(service.Auth)
+	router.PATCH("user/updateSelf", memberApi.UpdateMemberSelfView)
 	router.GET("user/memberList", memberApi.MemberFindAllView)
 	router.POST("user/insert", memberApi.InsertMemberView)
-	router.PATCH("user/update", memberApi.UpdateMemberView)
 	router.DELETE("user/delete", memberApi.DeleteMemberView)
 
 }
